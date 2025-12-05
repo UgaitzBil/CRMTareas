@@ -1,15 +1,8 @@
 // ----------------------
-// IMÁGENES DISPONIBLES
+// IMÁGENES DISPONIBLES (ahora dinámico)
 // ----------------------
-const availableImages = [
-  "/public/IMG/BBDD.jpg",
-  "/public/IMG/REDES.png",
-  "/public/IMG/WEB.jpg",
-  "/public/IMG/SistemasOperativos.jpg",
-  "/public/IMG/digi.jpg",
-  "/public/IMG/default.png"
-];
-
+let availableImages = [];
+let categories = [];
 let projects = [];
 
 // ----------------------
@@ -17,12 +10,20 @@ let projects = [];
 // ----------------------
 async function fetchProjects() {
   const res = await fetch("/api/projects");
-  projects = await res.json();
+  const data = await res.json();
+  categories = data.categories;
+  projects = data.projects;
+  availableImages = categories.map(cat => cat.image);
   renderProjectsList();
+  populateCategorySelect();
 }
 
 // Al inicio de index.html
-document.addEventListener("DOMContentLoaded", fetchProjects);
+document.addEventListener("DOMContentLoaded", () => {
+  fetchProjects();
+  // Polling para actualizaciones en tiempo real cada 5 segundos
+  setInterval(fetchProjects, 5000);
+});
 
 // ----------------------
 // INDEX.HTML FUNCTIONS
@@ -114,15 +115,15 @@ function renderProjectsList() {
   });
 }
 
-// cargar imágenes en selects
-function loadImageOptions(selectElement, currentImage) {
-  selectElement.innerHTML = "";
-  availableImages.forEach((img) => {
+function populateCategorySelect() {
+  const select = document.getElementById("projectImage");
+  if (!select) return;
+  select.innerHTML = "";
+  categories.forEach(cat => {
     const option = document.createElement("option");
-    option.value = img;
-    option.textContent = img.split("/").pop();
-    if (img === currentImage) option.selected = true;
-    selectElement.appendChild(option);
+    option.value = cat.image;
+    option.textContent = cat.name;
+    select.appendChild(option);
   });
 }
 
@@ -138,6 +139,12 @@ function openProject(id) {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("projectTitle")) {
     loadProjectView();
+    // Polling para actualizaciones en tiempo real
+    setInterval(fetchProjects, 5000);
+  } else {
+    fetchProjects();
+    // Polling para actualizaciones en tiempo real cada 5 segundos
+    setInterval(fetchProjects, 5000);
   }
 });
 
